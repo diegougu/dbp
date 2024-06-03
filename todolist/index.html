@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>TODO LIST</title>
+    
+    <link rel="stylesheet" href="css/styles.css"></link>
+    <style>
+    .completed {
+      text-decoration: line-through;
+    }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('#new-task').onsubmit = function () {
+        const cb = document.createElement("INPUT");
+        cb.setAttribute("type", "checkbox");
+   
+        const li = document.createElement('li');
+        const taskText = document.createElement('span');
+        taskText.textContent = document.querySelector('#task').value;
+   
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Eliminar';
+        deleteButton.addEventListener('click', function () {
+          // Elimina la tarea al hacer clic en el botón Eliminar
+          li.remove();
+   
+          // Envía la tarea a eliminar al servidor
+          fetch('/delete', {
+            method: 'POST',
+            body: JSON.stringify({ task: taskText.textContent }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (!data.success) {
+              console.error('Error al eliminar la tarea en el servidor');
+            }
+          });
+        });
+   
+        li.appendChild(cb);
+        li.appendChild(taskText);
+        li.appendChild(deleteButton);
+   
+        document.querySelector('#tasks').append(li);
+   
+        document.querySelector('#task').value = '';
+   
+        cb.addEventListener('change', () => {
+          if (cb.checked) {
+            taskText.classList.add('completed');
+          } else {
+            taskText.classList.remove('completed');
+          }
+        });
+   
+        return false;
+      };
+   
+      document.querySelector('#complete-all').addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change'));
+        });
+      });
+    });
+   </script>
+  </head>
+  <body>
+    <h1>TO DO LIST</h1>
+    <form id="new-task">
+      <input id="task" autocomplete="off" autofocus placeholder="New Task" type="text">
+      <input type="submit">
+    </form>
+    <button id="complete-all">Marcar todas como completadas</button>
+    <ol id="tasks">
+    </ol>
+  </body>
+</html>
